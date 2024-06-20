@@ -1,0 +1,271 @@
+# AWSTemplateFormatVersion: '2010-09-09'
+# Transform: AWS::Serverless-2016-10-31
+# Description: Example SAM Template with CloudWatch capabilities
+
+# Parameters:
+#   S3BucketName:
+#     Type: String
+#     Description: The name of the S3 bucket
+#     Default: my-default-s3-bucket-name  # Optional: Replace with your default bucket name
+  
+
+
+# Resources:
+#   MyDynamoDBTable:
+#     Type: AWS::DynamoDB::Table
+#     Properties:
+#       TableName: VISIT_COUNT
+#       AttributeDefinitions:
+#       - AttributeName: id
+#         AttributeType: N
+#       KeySchema:
+#       - AttributeName: id
+#         KeyType: HASH
+#       ProvisionedThroughput:
+#         ReadCapacityUnits: 1
+#         WriteCapacityUnits: 1
+#     Metadata:
+#       SamResourceId: MyDynamoDBTable
+  
+#   MyLambdaFunctionRole:
+#     Type: AWS::IAM::Role
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#         - Effect: Allow
+#           Principal:
+#             Service: lambda.amazonaws.com
+#           Action: sts:AssumeRole
+#       Policies:
+#       - PolicyName: DynamoDBAccessPolicy
+#         PolicyDocument:
+#           Version: '2012-10-17'
+#           Statement:
+#           - Effect: Allow
+#             Action:
+#             - dynamodb:GetItem
+#             - dynamodb:PutItem
+#             - dynamodb:UpdateItem
+#             Resource:
+#               Fn::GetAtt:
+#               - MyDynamoDBTable
+#               - Arn
+#       - PolicyName: CloudWatchLogsPolicy
+#         PolicyDocument:
+#           Version: '2012-10-17'
+#           Statement:
+#           - Effect: Allow
+#             Action:
+#             - logs:CreateLogGroup
+#             - logs:CreateLogStream
+#             - logs:PutLogEvents
+#             Resource: 
+#               - arn:aws:logs:*:*:log-group:/aws/lambda/*
+#       - PolicyName: S3AccessPolicy
+#         PolicyDocument:
+#           Version: '2012-10-17'
+#           Statement:
+#           - Effect: Allow
+#             Action:
+#             - s3:ListBucket
+#             - s3:GetObject
+#             - s3:PutObject
+#             Resource:
+#               - arn:aws:s3:::${S3BucketName}
+#               - arn:aws:s3:::${S3BucketName}/*
+#     Metadata:
+#       SamResourceId: MyLambdaFunctionRole
+  
+#   MyLambdaFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       FunctionName: MyFunction
+#       Handler: app.lambda_handler
+#       Runtime: python3.8
+#       CodeUri: s3://cloudresumehhn/lambda-code.zip
+#       Environment:
+#         Variables:
+#           TABLE_NAME:
+#             Ref: MyDynamoDBTable
+#           S3_BUCKET_NAME:
+#             Ref: S3BucketName
+#       Role:
+#         Fn::GetAtt:
+#         - MyLambdaFunctionRole
+#         - Arn
+#       Events:
+#         Api:
+#           Type: HttpApi
+#           Properties:
+#             Path: /endpoint
+#             Method: get
+#       FunctionUrlConfig:
+#         AuthType: NONE
+#         Cors:
+#           AllowOrigins:
+#             - '*'
+#           AllowMethods:
+#             - GET
+#           AllowHeaders:
+#             - '*'
+#           MaxAge: 0
+#           AllowCredentials: False
+#     Metadata:
+#       SamResourceId: MyLambdaFunction
+
+# Outputs:
+#   MyLambdaFunctionUrl:
+#     Description: URL for the Lambda function
+#     Value:
+#       !Sub "https://${MyLambdaFunction}.lambda-url.${AWS::Region}.on.aws/"
+#     Export:
+#       Name: MyLambdaFunctionUrl
+  
+#   MyDynamoDBTableName:
+#     Description: Name of the DynamoDB table
+#     Value:
+#       Ref: MyDynamoDBTable
+#     Export:
+#       Name: MyDynamoDBTableName
+
+
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Example SAM Template with CloudWatch capabilities
+
+Parameters:
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 bucket
+    Default: my-default-s3-bucket-name  # Optional: Replace with your default bucket name
+  
+  TableName:
+    Type: String
+    Description: The name of the DynamoDB table
+    Default: VISIT_COUNT  # Optional: Replace with your default table name
+  
+  LambdaFunctionName:
+    Type: String
+    Description: The name of the Lambda function
+    Default: MyFunction  # Optional: Replace with your default function name
+
+Resources:
+  MyDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: N
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+    Metadata:
+      SamResourceId: MyDynamoDBTable
+  
+  MyLambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: DynamoDBAccessPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            Resource:
+              Fn::GetAtt:
+              - MyDynamoDBTable
+              - Arn
+      - PolicyName: CloudWatchLogsPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: 
+              - arn:aws:logs:*:*:log-group:/aws/lambda/*
+      - PolicyName: S3AccessPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:ListBucket
+            - s3:GetObject
+            - s3:PutObject
+            Resource:
+              - arn:aws:s3:::${S3BucketName}
+              - arn:aws:s3:::${S3BucketName}/*
+    Metadata:
+      SamResourceId: MyLambdaFunctionRole
+  
+  MyLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref LambdaFunctionName
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      CodeUri: s3://cloudresumehhn/lambda-code.zip
+      Environment:
+        Variables:
+          TABLE_NAME:
+            Ref: MyDynamoDBTable
+          S3_BUCKET_NAME:
+            Ref: S3BucketName
+      Role:
+        Fn::GetAtt:
+        - MyLambdaFunctionRole
+        - Arn
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /endpoint
+            Method: get
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - GET
+          AllowHeaders:
+            - '*'
+          MaxAge: 0
+          AllowCredentials: False
+    Metadata:
+      SamResourceId: MyLambdaFunction
+
+Outputs:
+  MyLambdaFunctionUrl:
+    Description: URL for the Lambda function
+    Value:
+      !Sub "https://${MyLambdaFunction}.lambda-url.${AWS::Region}.on.aws/"
+    Export:
+      Name: MyLambdaFunctionUrl
+  
+  MyDynamoDBTableName:
+    Description: Name of the DynamoDB table
+    Value:
+      Ref: MyDynamoDBTable
+    Export:
+      Name: MyDynamoDBTableName
