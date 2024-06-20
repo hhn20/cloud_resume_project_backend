@@ -8,13 +8,21 @@
 #     Description: The name of the S3 bucket
 #     Default: my-default-s3-bucket-name  # Optional: Replace with your default bucket name
   
-
+#   TableName:
+#     Type: String
+#     Description: The name of the DynamoDB table
+#     Default: VISIT_COUNT  # Optional: Replace with your default table name
+  
+#   LambdaFunctionName:
+#     Type: String
+#     Description: The name of the Lambda function
+#     Default: MyFunction  # Optional: Replace with your default function name
 
 # Resources:
 #   MyDynamoDBTable:
 #     Type: AWS::DynamoDB::Table
 #     Properties:
-#       TableName: VISIT_COUNT
+#       TableName: !Ref TableName
 #       AttributeDefinitions:
 #       - AttributeName: id
 #         AttributeType: N
@@ -80,7 +88,7 @@
 #   MyLambdaFunction:
 #     Type: AWS::Serverless::Function
 #     Properties:
-#       FunctionName: MyFunction
+#       FunctionName: !Ref LambdaFunctionName
 #       Handler: app.lambda_handler
 #       Runtime: python3.8
 #       CodeUri: s3://cloudresumehhn/lambda-code.zip
@@ -128,7 +136,6 @@
 #       Ref: MyDynamoDBTable
 #     Export:
 #       Name: MyDynamoDBTableName
-
 
 
 AWSTemplateFormatVersion: '2010-09-09'
