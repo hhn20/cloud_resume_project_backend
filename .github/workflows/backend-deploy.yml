@@ -1,29 +1,73 @@
-name: Push to S3
+name: Deploy Lambda Function
 
 on:
   push:
     branches:
-      - main
+      - main  # Adjust this to your main branch name
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      S3_BUCKET_NAME: my-default-s3-bucket-name  # Replace with your default bucket name or leave empty
+      TABLE_NAME: VISIT_COUNT  # Replace with your default table name or leave empty
+      LAMBDA_FUNCTION_NAME: MyFunction  # Replace with your default function name or leave empty
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Specify your Python version here
 
-      - name: Sync files to S3
-        run: |
-          aws s3 sync . s3://${{ secrets.S3_BUCKET_NAME }} --exclude "*" --include "*.css" --include "*.html" --include "*.jpg" --include "*.png" --include "*.jpeg" --delete
+    - name: Create lambda-functions directory
+      run: mkdir -p lambda-functions
 
-      - name: Create CloudFront invalidation
-        run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+    - name: Copy app.py to lambda-functions
+      run: cp app.py lambda-functions/
+
+    - name: Install boto3 in lambda-functions
+      run: pip install boto3 -t lambda-functions/
+
+    - name: Install specific version of urllib3 in lambda-functions
+      run: pip install --upgrade urllib3==1.26.6 -t lambda-functions/
+
+    - name: Zip lambda-functions directory
+      run: |
+        cd lambda-functions
+        zip -r ../your-archive.zip ./*
+
+    - name: Upload to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}  # Adjust as needed
+        S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+      run: |
+        aws s3 cp your-archive.zip s3://$S3_BUCKET_NAME/lambda-code.zip
+
+    - name: Delete test stack
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}  # Adjust as needed
+      run: aws cloudformation delete-stack --stack-name test-stack
+
+    - name: Deploy new stack using SAM template
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}  # Adjust as needed
+        S3_BUCKET_NAME: ${{ env.S3_BUCKET_NAME }}
+        TABLE_NAME: ${{ env.TABLE_NAME }}
+        LAMBDA_FUNCTION_NAME: ${{ env.LAMBDA_FUNCTION_NAME }}
+      run: |
+        sam deploy --template-file template.yaml --stack-name test-stack --s3-bucket $S3_BUCKET_NAME --capabilities CAPABILITY_IAM --parameter-overrides TableName=$TABLE_NAME S3BucketName=$S3_BUCKET_NAME LambdaFunctionName=$LAMBDA_FUNCTION_NAME
+
+    - name: Clean up
+      run: |
+        rm -rf lambda-functions
+        rm your-archive.zip
