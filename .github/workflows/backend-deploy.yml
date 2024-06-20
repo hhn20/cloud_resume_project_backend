@@ -65,7 +65,7 @@ jobs:
         TABLE_NAME: ${{ env.TABLE_NAME }}
         LAMBDA_FUNCTION_NAME: ${{ env.LAMBDA_FUNCTION_NAME }}
       run: |
-        sam deploy --template-file packaged.yaml --stack-name test-stack --s3-bucket $S3_BUCKET_NAME --capabilities CAPABILITY_IAM --parameter-overrides TableName=$TABLE_NAME S3BucketName=$S3_BUCKET_NAME LambdaFunctionName=$LAMBDA_FUNCTION_NAME
+        sam deploy --template-file packaged.yaml --stack-name test-stack --s3-bucket $S3_BUCKET_NAME --capabilities CAPABILITY_IAM --parameter-overrides TableName=$TABLE_NAME S3BucketName=$S3_BUCKET_NAME LambdaFunctionName=$LAMBDA_FUNCTION_NAME  --region $AWS_REGION
 
     - name: Clean up
       run: |
