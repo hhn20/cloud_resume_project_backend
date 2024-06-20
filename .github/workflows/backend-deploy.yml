@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      S3_BUCKET_NAME: my-default-s3-bucket-name  # Replace with your default bucket name or leave empty
+      S3_BUCKET_NAME: cloudresumehhn  # Replace with your default bucket name or leave empty
       TABLE_NAME: VISIT_COUNT  # Replace with your default table name or leave empty
       LAMBDA_FUNCTION_NAME: MyFunction  # Replace with your default function name or leave empty
 
