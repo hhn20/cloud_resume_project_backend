@@ -16,7 +16,7 @@ def lambda_handler(event, context):
         )
         
         # Get the updated counts
-        print("hii")
+        print("hiii")
         new_count = response['Attributes']
         
         return {
